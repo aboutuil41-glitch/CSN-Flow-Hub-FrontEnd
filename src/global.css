@@ -1,0 +1,220 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* ── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Tokens ─────────────────────────────────────────────── */
+:root {
+    --bg:           #f7f6f3;
+    --surface:      #ffffff;
+    --surface2:     #fdfcfa;
+    --surface3:     #f4f3f0;
+    --border:       #ece9e0;
+    --border2:      #e0ddd6;
+    --border3:      #d4d0c8;
+    --text:         #1a1a1a;
+    --text-dim:     #2a2a2a;
+    --text-muted:   #555;
+    --text-faint:   #888;
+    --text-ghost:   #aaa;
+    --text-dead:    #bbb;
+    --text-sub:     #ccc;
+    --accent:       #353535;
+    --accent-dim:   #141313;
+    --accent-bg:    #fef5dc;
+    --accent-border:#f0d98a;
+    --red:          #d95050;
+    --red-bg:       #fdeaea;
+    --red-border:   #f5c0c0;
+    --green:        #1a7a48;
+    --green-bg:     #eafaf1;
+    --green-border: #a0ddb8;
+    --blue:         #3060b0;
+    --blue-bg:      #eaf1fc;
+    --blue-border:  #c8d8f5;
+    --font:         'Outfit', sans-serif;
+    --radius-sm:    8px;
+    --radius-md:    12px;
+    --radius-lg:    16px;
+    --shadow-sm:    0 1px 3px rgba(0,0,0,.04);
+    --shadow-md:    0 2px 10px rgba(0,0,0,.08);
+    --shadow-accent:0 2px 10px rgba(201,162,39,.12);
+    --transition:   0.15s ease;
+}
+
+/* ── Base ───────────────────────────────────────────────── */
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Page Shell ─────────────────────────────────────────── */
+.page {
+    min-height: 100vh;
+    padding: 32px 28px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* ── Page Header ────────────────────────────────────────── */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+}
+
+.page-header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1.1;
+}
+
+.page-title span { color: var(--accent); }
+
+.page-meta {
+    font-size: 13px;
+    color: var(--text-dead);
+    font-weight: 500;
+}
+
+/* ── Label ──────────────────────────────────────────────── */
+.label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-ghost);
+}
+
+/* ── Badge ──────────────────────────────────────────────── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.badge.yellow { background: var(--accent-bg);  color: #9a7510; }
+.badge.green  { background: var(--green-bg);   color: var(--green); }
+.badge.red    { background: var(--red-bg);     color: var(--red); }
+.badge.blue   { background: var(--blue-bg);    color: var(--blue); }
+.badge.gray   { background: #f2f2f0;           color: var(--text-faint); }
+
+/* ── Buttons ────────────────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-dim); border-color: var(--accent-dim); }
+.btn-primary:active:not(:disabled) { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-ghost {
+    background: var(--surface);
+    color: var(--text-muted);
+    border-color: var(--border);
+}
+.btn-ghost:hover { background: var(--surface3); border-color: var(--border3); color: var(--text); }
+
+.btn-danger {
+    background: var(--red-bg);
+    color: var(--red);
+    border-color: var(--red-border);
+}
+.btn-danger:hover { background: #fbd0d0; border-color: #e08888; }
+.btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Input ──────────────────────────────────────────────── */
+.input {
+    width: 100%;
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 9px 12px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    color: var(--text);
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.input::placeholder { color: var(--text-sub); }
+.input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(201,162,39,.1);
+}
+.input-error { border-color: var(--red) !important; }
+.textarea { min-height: 80px; resize: vertical; }
+
+.error-text {
+    font-size: 12px;
+    color: var(--red);
+    font-weight: 500;
+}
+
+/* ── Card ───────────────────────────────────────────────── */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.card:hover { border-color: var(--border3); }
+
+/* ── States ─────────────────────────────────────────────── */
+.state-loading,
+.state-error,
+.state-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--text-dead);
+    font-weight: 500;
+}
+.state-loading { min-height: 60vh; }
+.state-error   { min-height: 60vh; color: var(--red); }
+.state-empty   { padding: 64px 0; }
+
+/* ── Divider ────────────────────────────────────────────── */
+.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 14px 0;
+}
