@@ -1,0 +1,353 @@
+/* ─── Page ─────────────────────────────────────────────── */
+.projects-page {
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* ─── Project list ──────────────────────────────────────── */
+.projects-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.project-card {
+    padding: 20px 22px;
+}
+
+.project-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.project-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.project-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* ─── Members ───────────────────────────────────────────── */
+.project-members-label {
+    margin-bottom: 8px;
+}
+
+.project-members {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.project-member {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.member-name {
+    font-size: 13px;
+    font-weight: 500;
+    flex: 1;
+    color: var(--text-dim);
+}
+
+.member-email {
+    font-size: 12px;
+    color: var(--text-ghost);
+    flex: 2;
+}
+
+/* ─── Actions ───────────────────────────────────────────── */
+.project-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Shared action button base */
+.btn-tasks,
+.btn-files,
+.btn-complete,
+.btn-hold,
+.btn-delete-proj {
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 13px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    border: 1px solid transparent;
+}
+
+.btn-tasks {
+    background: var(--blue-bg);
+    color: var(--blue);
+    border-color: var(--blue-border);
+}
+.btn-tasks:hover { background: #dce8ff; border-color: #8aaee0; }
+
+.btn-files {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: var(--green-border);
+}
+.btn-files:hover { background: #d6f5e5; border-color: #7dcca0; }
+
+.btn-complete {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: var(--green-border);
+}
+.btn-complete:hover:not(:disabled) { background: #c6f0d8; border-color: #5bbf8c; }
+.btn-complete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-hold {
+    background: var(--accent-bg);
+    color: #9a7510;
+    border-color: var(--accent-border);
+}
+.btn-hold:hover:not(:disabled) { background: #fdedb8; border-color: #d4b84a; }
+.btn-hold:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-delete-proj {
+    background: var(--red-bg);
+    color: var(--red);
+    border-color: var(--red-border);
+}
+.btn-delete-proj:hover:not(:disabled) { background: #fbd0d0; border-color: #e08888; }
+.btn-delete-proj:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── Modal ─────────────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 24px;
+}
+
+.modal {
+    background: var(--surface);
+    border-radius: 14px;
+    width: 460px;
+    max-width: 90vw;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    animation: modal-in 0.15s ease;
+}
+
+@keyframes modal-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 0;
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    margin: 0;
+}
+.modal-title span { color: #c9a227; }
+
+.modal-body {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modal-field .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.modal-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+}
+
+/* ─── File upload (modal) ───────────────────────────────── */
+.label-optional {
+    font-size: 11px;
+    color: var(--text-ghost);
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+}
+
+.file-drop-zone {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1px dashed var(--border3);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+}
+.file-drop-zone:hover {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+}
+
+.file-drop-icon {
+    font-size: 16px;
+    color: var(--text-ghost);
+}
+
+.file-drop-text {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.file-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 6px;
+}
+
+.file-list-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+}
+
+.file-list-name {
+    flex: 1;
+    color: var(--text-dim);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-list-size {
+    color: var(--text-ghost);
+    white-space: nowrap;
+}
+
+.file-list-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dead);
+    font-size: 11px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color var(--transition);
+}
+.file-list-remove:hover { color: var(--red); }
+
+/* ─── Attachments (project card) ────────────────────────── */
+.project-attachments {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.attachment-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.attachment-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.attachment-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.btn-attachment {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+.btn-attachment:hover {
+    background: var(--surface3);
+    border-color: var(--border3);
+    color: var(--text);
+}
