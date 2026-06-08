@@ -1,0 +1,143 @@
+.admin-page { background: var(--bg); color: var(--text); }
+
+/* ── Stats row ──────────────────────────────────────────── */
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.admin-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.admin-stat:hover {
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-accent);
+}
+
+.admin-stat i {
+    font-size: 18px;
+    color: #c9a227;
+    margin-bottom: 2px;
+}
+
+.admin-stat strong {
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--text);
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.admin-stat span {
+    font-size: 11px;
+    color: var(--text-ghost);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+
+/* ── Action blocks grid ─────────────────────────────────── */
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 720px) {
+    .admin-grid { grid-template-columns: 1fr; }
+}
+
+.admin-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.admin-block-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0ede6;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-block-header i {
+    font-size: 16px;
+    color: #c9a227;
+}
+
+.admin-block-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #b8901f;
+}
+
+.admin-block-body {
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ── Field group ────────────────────────────────────────── */
+.admin-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-field-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #c0b89a;
+}
+
+.admin-block-body .input {
+    background: var(--surface);
+}
+
+.admin-block-body .btn-primary {
+    align-self: flex-end;
+    margin-top: 4px;
+}
+
+/* ── Toast notification ─────────────────────────────────── */
+.admin-msg {
+    position: fixed;
+    bottom: 32px;
+    right: 40px;
+    background: var(--surface);
+    border: 1px solid var(--green-border);
+    border-left: 3px solid var(--green);
+    border-radius: var(--radius-sm);
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--green);
+    box-shadow: var(--shadow-md);
+    z-index: 300;
+    animation: slide-in 0.2s ease;
+}
+
+@keyframes slide-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
