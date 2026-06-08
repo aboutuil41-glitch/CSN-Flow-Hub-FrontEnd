@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
+@import '../global.css';
+
+/* ── Page ───────────────────────────────────────────────── */
+.login-page {
+    min-height: 100vh;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+}
+
+/* ── Subtle grid texture on background ──────────────────── */
+.login-page::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── Card ───────────────────────────────────────────────── */
+.login-card {
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-md);
+    padding: 48px 44px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Gold top accent line ───────────────────────────────── */
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 24px;
+    right: 24px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #c9a227, transparent);
+    border-radius: 0 0 2px 2px;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.login-header {
+    margin-bottom: 36px;
+}
+
+.login-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 10px;
+}
+
+.login-title span {
+    color: #c9a227;
+}
+
+.login-sub {
+    display: block;
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+}
+
+/* ── Form ───────────────────────────────────────────────── */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.field-label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+}
+
+.field-error {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--red);
+    text-transform: uppercase;
+}
+
+/* ── Submit button ──────────────────────────────────────── */
+.login-btn {
+    margin-top: 6px;
+    width: 100%;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    justify-content: center;
+}
+
+/* ── Footer link ────────────────────────────────────────── */
+.login-footer-link {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-ghost);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.04em;
+}
+
+.login-footer-link a {
+    color: #c9a227;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color var(--transition);
+}
+
+.login-footer-link a:hover {
+    color: #a07a18;
+}
+
+/* ── Wordmark ───────────────────────────────────────────── */
+.login-wordmark {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dead);
+    z-index: 1;
+    white-space: nowrap;
+}
