@@ -141,3 +141,140 @@
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Activity log ───────────────────────────────────────── */
+.admin-log {
+    margin-top: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.admin-log-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0ede6;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.admin-log-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.admin-log-title-row i {
+    font-size: 16px;
+    color: #c9a227;
+}
+
+.admin-log-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-log-filters .input {
+    width: auto;
+    min-width: 130px;
+    font-size: 12px;
+    padding: 6px 10px;
+    background: var(--surface);
+}
+
+.admin-log-table-wrap {
+    overflow-x: auto;
+}
+
+.admin-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.admin-log-table thead tr {
+    border-bottom: 1px solid var(--border);
+}
+
+.admin-log-table th {
+    padding: 10px 20px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-ghost);
+    white-space: nowrap;
+}
+
+.admin-log-table td {
+    padding: 11px 20px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.admin-log-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-log-table tbody tr:hover td {
+    background: var(--surface2);
+}
+
+.log-user {
+    font-weight: 500;
+    color: var(--text);
+    display: block;
+}
+
+.log-email {
+    font-size: 11px;
+    color: var(--text-ghost);
+    display: block;
+    margin-top: 1px;
+}
+
+.log-subject {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.log-subject-id {
+    font-weight: 400;
+    color: var(--text-ghost);
+}
+
+.log-date {
+    color: var(--text-faint);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.log-none {
+    color: var(--text-dead);
+}
+
+.admin-log-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+}
+
+.log-page-info {
+    font-size: 12px;
+    color: var(--text-faint);
+    font-weight: 500;
+    min-width: 80px;
+    text-align: center;
+}

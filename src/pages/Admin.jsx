@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getStatistics, updateRole } from "../api/admin"
+import { getStatistics, updateRole, getLogs } from "../api/admin"
 import { assignTask, createTask, getTasks } from "../api/tasks"
 import { assignMember, getProjects } from "../api/projects"
 import { getUser } from "../api/users"
@@ -14,6 +14,13 @@ const STAT_ICONS = {
     done:      "ti ti-checks",
     files:     "ti ti-paperclip",
     feedback:  "ti ti-message",
+}
+
+const ACTION_COLORS = {
+    created: "green",
+    updated: "blue",
+    deleted: "red",
+    assigned: "yellow",
 }
 
 function AdminBlock({ icon, title, children }) {
@@ -40,6 +47,13 @@ function FieldGroup({ label, children }) {
 }
 
 function Admin() {
+    const ACTION_MAP = {
+    created: ["project.created", "task.created"],
+    updated: ["project.update", "task.update"],
+    deleted: ["project.delete", "task.delete"],
+    assigned: ["task.assign", "project.assign"],
+    }
+
     const queryClient = useQueryClient()
     const [msg, setMsg] = useState("")
 
@@ -48,6 +62,9 @@ function Admin() {
     const [taskForm,    setTaskForm]    = useState({ projectId: "", title: "", description: "" })
     const [assignForm,  setAssignForm]  = useState({ taskId: "", userId: "" })
     const [taskProject, setTaskProject] = useState("")
+
+    const [logFilters, setLogFilters] = useState({ action: "", subject_type: "", user_id: "" })
+    const [logPage,    setLogPage]    = useState(1)
 
     const notify = (text) => { setMsg(text); setTimeout(() => setMsg(""), 3000) }
 
@@ -72,6 +89,12 @@ function Admin() {
         enabled: !!taskProject,
     })
 
+    const { data: logsData, isLoading: logsLoading } = useQuery({
+        queryKey: ["activity-logs", logFilters, logPage],
+        queryFn: () => getLogs({ ...logFilters, action: ACTION_MAP[logFilters.action] ?? logFilters.action, page: logPage, per_page: 15 }).then(r => r.data.logs),
+        keepPreviousData: true,
+    })
+
     const updateRoleMutation = useMutation({
         mutationFn: ({ userId, role }) => updateRole(userId, role),
         onSuccess: () => { notify("Role updated"); setRoleForm({ userId: "", role: "client" }) },
@@ -93,7 +116,7 @@ function Admin() {
     })
 
     const teamUsers = users.filter(u => u.role === "team")
-    
+
     const unassignedTasks = projectTasks.filter(task => !task.assigned_to);
 
     const selectedProject = projects.find(
@@ -105,7 +128,7 @@ function Admin() {
             projectUser => projectUser.id === user.id
         )
     );
-    
+
     const selectedTaskProject = projects.find(
         p => p.id === Number(taskProject)
     );
@@ -113,6 +136,15 @@ function Admin() {
     const projectUsers = selectedTaskProject
         ? selectedTaskProject.users.filter(u => u.role === "team")
         : [];
+
+    const logs      = logsData?.data ?? []
+    const logsMeta  = logsData ?? {}
+    const totalPages = logsMeta.last_page ?? 1
+
+    const applyLogFilters = (newFilters) => {
+        setLogFilters(newFilters)
+        setLogPage(1)
+    }
 
     return (
         <div className="page admin-page">
@@ -282,6 +314,122 @@ function Admin() {
                     </button>
                 </AdminBlock>
 
+            </div>
+
+            {/* ── Activity Log ── */}
+            <div className="admin-log">
+                <div className="admin-log-header">
+                    <div className="admin-log-title-row">
+                        <i className="ti ti-activity" />
+                        <span className="admin-block-title">Activity log</span>
+                    </div>
+                    <div className="admin-log-filters">
+                        <select
+                            className="input"
+                            value={logFilters.action}
+                            onChange={e => applyLogFilters({ ...logFilters, action: e.target.value })}
+                        >
+                            <option value="">All actions</option>
+                            <option value="created">Created</option>
+                            <option value="updated">Updated</option>
+                            <option value="deleted">Deleted</option>
+                            <option value="assigned">Assigned</option>
+                        </select>
+                        <select
+                            className="input"
+                            value={logFilters.subject_type}
+                            onChange={e => applyLogFilters({ ...logFilters, subject_type: e.target.value })}
+                        >
+                            <option value="">All types</option>
+                            <option value="Task">Task</option>
+                            <option value="Project">Project</option>
+                            <option value="User">User</option>
+                            <option value="File">File</option>
+                        </select>
+                        <select
+                            className="input"
+                            value={logFilters.user_id}
+                            onChange={e => applyLogFilters({ ...logFilters, user_id: e.target.value })}
+                        >
+                            <option value="">All users</option>
+                            {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                        </select>
+                        {(logFilters.action || logFilters.subject_type || logFilters.user_id) && (
+                            <button
+                                className="btn btn-ghost"
+                                onClick={() => applyLogFilters({ action: "", subject_type: "", user_id: "" })}
+                            >
+                                <i className="ti ti-x" /> Clear
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {logsLoading ? (
+                    <div className="state-loading" style={{ minHeight: 120 }}>Loading…</div>
+                ) : logs.length === 0 ? (
+                    <div className="state-empty">No activity found</div>
+                ) : (
+                    <div className="admin-log-table-wrap">
+                        <table className="admin-log-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Subject</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {logs.map(log => (
+                                    <tr key={log.id}>
+                                        <td>
+                                            <span className="log-user">{log.user?.name ?? "—"}</span>
+                                            {log.user?.email && <span className="log-email">{log.user.email}</span>}
+                                        </td>
+                                        <td>
+                                            <span className={`badge ${ACTION_COLORS[log.action] ?? "gray"}`}>
+                                                {log.action}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {log.subject_type
+                                                ? <span className="log-subject">{log.subject_type} <span className="log-subject-id">#{log.subject_id}</span></span>
+                                                : <span className="log-none">—</span>
+                                            }
+                                        </td>
+                                        <td className="log-date">
+                                            {new Date(log.created_at).toLocaleString(undefined, {
+                                                dateStyle: "medium",
+                                                timeStyle: "short",
+                                            })}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                {totalPages > 1 && (
+                    <div className="admin-log-pagination">
+                        <button
+                            className="btn btn-ghost"
+                            onClick={() => setLogPage(p => Math.max(1, p - 1))}
+                            disabled={logPage === 1}
+                        >
+                            <i className="ti ti-chevron-left" />
+                        </button>
+                        <span className="log-page-info">Page {logPage} of {totalPages}</span>
+                        <button
+                            className="btn btn-ghost"
+                            onClick={() => setLogPage(p => Math.min(totalPages, p + 1))}
+                            disabled={logPage === totalPages}
+                        >
+                            <i className="ti ti-chevron-right" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {msg && <div className="admin-msg">{msg}</div>}
