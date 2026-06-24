@@ -5,6 +5,23 @@ import { useAuth } from "../context/AuthContext"
 import "../layouts/Projects.css"
 import { useState } from "react"
 import CreateProjectModal from "../components/CreateProjectModal"
+import {
+    FileText,
+    Image,
+    Video,
+    Music,
+    FileSpreadsheet,
+    Archive,
+    File,
+    Plus,
+    CheckCheck,
+    Folders,
+    CircleCheck,
+    PauseCircle,
+    Trash2,
+    Download,
+    Eye,
+} from "lucide-react"
 
 const BASE_URL = "http://127.0.0.1:8000/storage/"
 
@@ -21,19 +38,20 @@ const ROLE_BADGE = {
     admin:  "yellow",
 }
 
-const FILE_ICONS = {
-    pdf:  "📄",
-    jpg:  "🖼", jpeg: "🖼", png: "🖼", gif: "🖼", webp: "🖼", svg: "🖼",
-    mp4:  "🎬", webm: "🎬",
-    mp3:  "🎵", wav:  "🎵",
-    doc:  "📝", docx: "📝",
-    xls:  "📊", xlsx: "📊",
-    zip:  "🗜", rar:  "🗜",
+const FILE_ICON_MAP = {
+    pdf:  FileText,
+    jpg:  Image, jpeg: Image, png: Image, gif: Image, webp: Image, svg: Image,
+    mp4:  Video, webm: Video,
+    mp3:  Music, wav:  Music,
+    doc:  FileText, docx: FileText,
+    xls:  FileSpreadsheet, xlsx: FileSpreadsheet,
+    zip:  Archive, rar:  Archive,
 }
 
 function getIcon(filename) {
     const ext = filename.split(".").pop().toLowerCase()
-    return FILE_ICONS[ext] ?? "📎"
+    const Icon = FILE_ICON_MAP[ext] ?? File
+    return <Icon size={16} />
 }
 
 function Projects() {
@@ -88,7 +106,7 @@ function Projects() {
                 </div>
                 {user?.role === "client" && (
                     <button className="btn btn-primary" onClick={() => setOpen(true)}>
-                        + New project
+                        <Plus size={15} /> New project
                     </button>
                 )}
             </div>
@@ -147,13 +165,13 @@ function Projects() {
                                                     target="_blank"
                                                     rel="noreferrer"
                                                 >
-                                                    View
+                                                    <Eye size={13} /> View
                                                 </a>
                                                 <a
                                                     className="btn-attachment"
                                                     onClick={() => handleDownload(f.id, f.name)}
                                                 >
-                                                    ↓ Download
+                                                    <Download size={13} /> Download
                                                 </a>
                                             </div>
                                         </li>
@@ -167,11 +185,11 @@ function Projects() {
                         <div className="project-actions">
                             {user?.role !== "client" && (
                                 <Link className="btn-tasks" to={`/Tasks/${project.id}`}>
-                                    ✓ Tasks
+                                    <CheckCheck size={14} /> Tasks
                                 </Link>
                             )}
                             <Link className="btn-files" to={`/Files/${project.id}`}>
-                                ⌀ Files
+                                <Folders size={14} /> Files
                             </Link>
                             {user?.role === "admin" && (
                                 <>
@@ -180,14 +198,14 @@ function Projects() {
                                         onClick={() => completeMutation.mutate(project.id)}
                                         disabled={completeMutation.isPending}
                                     >
-                                        ✓ Mark complete
+                                        <CircleCheck size={14} /> Mark complete
                                     </button>
                                     <button
                                         className="btn-hold"
                                         onClick={() => holdMutation.mutate(project.id)}
                                         disabled={holdMutation.isPending}
                                     >
-                                        ⏸ Put on hold
+                                        <PauseCircle size={14} /> Put on hold
                                     </button>
                                 </>
                             )}
@@ -197,7 +215,7 @@ function Projects() {
                                     onClick={() => deleteMutation.mutate(project.id)}
                                     disabled={deleteMutation.isPending}
                                 >
-                                    ✕ Delete
+                                    <Trash2 size={14} /> Delete
                                 </button>
                             )}
                         </div>

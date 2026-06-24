@@ -5,16 +5,23 @@ import { assignTask, createTask, getTasks } from "../api/tasks"
 import { assignMember, getProjects } from "../api/projects"
 import { getUser } from "../api/users"
 import "../layouts/Admin.css"
-
-const STAT_ICONS = {
-    users:     "ti ti-users",
-    projects:  "ti ti-folder",
-    completed: "ti ti-circle-check",
-    pending:   "ti ti-clock",
-    done:      "ti ti-checks",
-    files:     "ti ti-paperclip",
-    feedback:  "ti ti-message",
-}
+import {
+    Users,
+    Folder,
+    CircleCheck,
+    Clock,
+    CheckCheck,
+    Paperclip,
+    MessageCircle,
+    Shield,
+    UserPlus,
+    Plus,
+    UserCheck,
+    Activity,
+    ChevronLeft,
+    ChevronRight,
+    X,
+} from "lucide-react"
 
 const ACTION_COLORS = {
     created: "green",
@@ -23,11 +30,11 @@ const ACTION_COLORS = {
     assigned: "yellow",
 }
 
-function AdminBlock({ icon, title, children }) {
+function AdminBlock({ icon: Icon, title, children }) {
     return (
         <div className="admin-block">
             <div className="admin-block-header">
-                <i className={icon} />
+                <Icon size={18} />
                 <span className="admin-block-title">{title}</span>
             </div>
             <div className="admin-block-body">
@@ -48,10 +55,10 @@ function FieldGroup({ label, children }) {
 
 function Admin() {
     const ACTION_MAP = {
-    created: ["project.created", "task.created"],
-    updated: ["project.update", "task.update"],
-    deleted: ["project.delete", "task.delete"],
-    assigned: ["task.assign", "project.assign"],
+        created: ["project.created", "task.created"],
+        updated: ["project.update", "task.update"],
+        deleted: ["project.delete", "task.delete"],
+        assigned: ["task.assign", "project.assign"],
     }
 
     const queryClient = useQueryClient()
@@ -117,25 +124,19 @@ function Admin() {
 
     const teamUsers = users.filter(u => u.role === "team")
 
-    const unassignedTasks = projectTasks.filter(task => !task.assigned_to);
+    const unassignedTasks = projectTasks.filter(task => !task.assigned_to)
 
-    const selectedProject = projects.find(
-        p => p.id === Number(memberForm.projectId)
-    );
+    const selectedProject = projects.find(p => p.id === Number(memberForm.projectId))
 
     const availableUsers = teamUsers.filter(
-        user => !selectedProject?.users.some(
-            projectUser => projectUser.id === user.id
-        )
-    );
+        user => !selectedProject?.users.some(projectUser => projectUser.id === user.id)
+    )
 
-    const selectedTaskProject = projects.find(
-        p => p.id === Number(taskProject)
-    );
+    const selectedTaskProject = projects.find(p => p.id === Number(taskProject))
 
     const projectUsers = selectedTaskProject
         ? selectedTaskProject.users.filter(u => u.role === "team")
-        : [];
+        : []
 
     const logs      = logsData?.data ?? []
     const logsMeta  = logsData ?? {}
@@ -145,6 +146,16 @@ function Admin() {
         setLogFilters(newFilters)
         setLogPage(1)
     }
+
+    const STATS = [
+        { icon: Users,         value: stats?.users?.total,       label: "Users" },
+        { icon: Folder,        value: stats?.projects?.total,    label: "Projects" },
+        { icon: CircleCheck,   value: stats?.projects?.completed,label: "Completed" },
+        { icon: Clock,         value: stats?.tasks?.pending,      label: "Pending tasks" },
+        { icon: CheckCheck,    value: stats?.tasks?.completed,    label: "Done tasks" },
+        { icon: Paperclip,     value: stats?.files?.total,        label: "Files" },
+        { icon: MessageCircle, value: stats?.feedback?.total,     label: "Feedback" },
+    ]
 
     return (
         <div className="page admin-page">
@@ -158,48 +169,20 @@ function Admin() {
             {/* ── Stats ── */}
             {stats && (
                 <div className="admin-stats">
-                    <div className="admin-stat">
-                        <i className={STAT_ICONS.users} />
-                        <strong>{stats.users?.total ?? "—"}</strong>
-                        <span>Users</span>
-                    </div>
-                    <div className="admin-stat">
-                        <i className={STAT_ICONS.projects} />
-                        <strong>{stats.projects?.total ?? "—"}</strong>
-                        <span>Projects</span>
-                    </div>
-                    <div className="admin-stat">
-                        <i className={STAT_ICONS.completed} />
-                        <strong>{stats.projects?.completed ?? "—"}</strong>
-                        <span>Completed</span>
-                    </div>
-                    <div className="admin-stat">
-                        <i className={STAT_ICONS.pending} />
-                        <strong>{stats.tasks?.pending ?? "—"}</strong>
-                        <span>Pending tasks</span>
-                    </div>
-                    <div className="admin-stat">
-                        <i className={STAT_ICONS.done} />
-                        <strong>{stats.tasks?.completed ?? "—"}</strong>
-                        <span>Done tasks</span>
-                    </div>
-                    <div className="admin-stat">
-                        <i className={STAT_ICONS.files} />
-                        <strong>{stats.files?.total ?? "—"}</strong>
-                        <span>Files</span>
-                    </div>
-                    <div className="admin-stat">
-                        <i className={STAT_ICONS.feedback} />
-                        <strong>{stats.feedback?.total ?? "—"}</strong>
-                        <span>Feedback</span>
-                    </div>
+                    {STATS.map(({ icon: Icon, value, label }) => (
+                        <div className="admin-stat" key={label}>
+                            <Icon size={20} />
+                            <strong>{value ?? "—"}</strong>
+                            <span>{label}</span>
+                        </div>
+                    ))}
                 </div>
             )}
 
             {/* ── Action blocks ── */}
             <div className="admin-grid">
 
-                <AdminBlock icon="ti ti-shield" title="Update user role">
+                <AdminBlock icon={Shield} title="Update user role">
                     <FieldGroup label="User">
                         <select className="input" value={roleForm.userId} onChange={e => setRoleForm({ ...roleForm, userId: e.target.value })}>
                             <option value="">Select user...</option>
@@ -222,7 +205,7 @@ function Admin() {
                     </button>
                 </AdminBlock>
 
-                <AdminBlock icon="ti ti-user-plus" title="Assign member to project">
+                <AdminBlock icon={UserPlus} title="Assign member to project">
                     <FieldGroup label="Project">
                         <select className="input" value={memberForm.projectId} onChange={e => setMemberForm({ ...memberForm, projectId: e.target.value })}>
                             <option value="">Select project...</option>
@@ -244,7 +227,7 @@ function Admin() {
                     </button>
                 </AdminBlock>
 
-                <AdminBlock icon="ti ti-plus" title="Create task">
+                <AdminBlock icon={Plus} title="Create task">
                     <FieldGroup label="Project">
                         <select className="input" value={taskForm.projectId} onChange={e => setTaskForm({ ...taskForm, projectId: e.target.value })}>
                             <option value="">Select project...</option>
@@ -276,7 +259,7 @@ function Admin() {
                     </button>
                 </AdminBlock>
 
-                <AdminBlock icon="ti ti-user-check" title="Assign task">
+                <AdminBlock icon={UserCheck} title="Assign task">
                     <FieldGroup label="Project">
                         <select
                             className="input"
@@ -320,7 +303,7 @@ function Admin() {
             <div className="admin-log">
                 <div className="admin-log-header">
                     <div className="admin-log-title-row">
-                        <i className="ti ti-activity" />
+                        <Activity size={18} />
                         <span className="admin-block-title">Activity log</span>
                     </div>
                     <div className="admin-log-filters">
@@ -359,7 +342,7 @@ function Admin() {
                                 className="btn btn-ghost"
                                 onClick={() => applyLogFilters({ action: "", subject_type: "", user_id: "" })}
                             >
-                                <i className="ti ti-x" /> Clear
+                                <X size={14} /> Clear
                             </button>
                         )}
                     </div>
@@ -418,7 +401,7 @@ function Admin() {
                             onClick={() => setLogPage(p => Math.max(1, p - 1))}
                             disabled={logPage === 1}
                         >
-                            <i className="ti ti-chevron-left" />
+                            <ChevronLeft size={16} />
                         </button>
                         <span className="log-page-info">Page {logPage} of {totalPages}</span>
                         <button
@@ -426,7 +409,7 @@ function Admin() {
                             onClick={() => setLogPage(p => Math.min(totalPages, p + 1))}
                             disabled={logPage === totalPages}
                         >
-                            <i className="ti ti-chevron-right" />
+                            <ChevronRight size={16} />
                         </button>
                     </div>
                 )}
