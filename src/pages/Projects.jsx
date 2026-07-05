@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext"
 import "../layouts/Projects.css"
 import { useState } from "react"
 import CreateProjectModal from "../components/CreateProjectModal"
+import { viewFile } from "../utils/viewFile"
 import {
     FileText,
     Image,
@@ -22,8 +23,6 @@ import {
     Download,
     Eye,
 } from "lucide-react"
-
-const BASE_URL = "http://127.0.0.1:8000/storage/"
 
 const STATUS_BADGE = {
     planning:    "blue",
@@ -161,9 +160,7 @@ function Projects() {
                                             <div className="attachment-actions">
                                                 <a
                                                     className="btn-attachment"
-                                                    href={BASE_URL + f.path}
-                                                    target="_blank"
-                                                    rel="noreferrer"
+                                                    onClick={() => viewFile(downloadFile, f.id)}
                                                 >
                                                     <Eye size={13} /> View
                                                 </a>

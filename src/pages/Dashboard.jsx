@@ -66,7 +66,7 @@ function Dashboard() {
     const myProjects = projects
 
     const completedProjects = projects.filter(
-        p => p.status === "completed"
+        p => p.statue === "completed"
     ).length
 
     return (
@@ -142,7 +142,7 @@ function Dashboard() {
                                     key={p.id}
                                     name={p.name}
                                     desc={p.description}
-                                    status={p.status}
+                                    status={p.statue}
                                     members={p.users ?? []}
                                     taskCount={p.tasks_count}
                                 />

@@ -4,7 +4,6 @@ import "../layouts/NavBar.css"
 
 function NavBar(){
     const { user, logout } = useAuth()
-    console.log(user)
 
     return(
     <nav>

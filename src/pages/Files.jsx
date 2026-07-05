@@ -3,14 +3,31 @@ import { getFiles, uploadFile, downloadFile, deleteFile } from "../api/files"
 import { getFeedback, createFeedback, simplifyFeedback } from "../api/feedback"
 import { useParams } from "react-router-dom"
 import { useState } from "react"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { useAuth } from "../context/AuthContext"
 import FilePreview from "../components/FilePreview"
 import "../layouts/Files.css"
 
-const TYPE_LABELS = { comment: "Comment", approval: "Approval", change_request: "Change" }
-const TYPE_CLASS  = { comment: "fb-type--comment", approval: "fb-type--approval", change_request: "fb-type--change" }
+const TYPE_LABELS = { comment: "Comment", approval: "Approval", change_request: "Change", blocked: "Blocked" }
+const TYPE_CLASS  = { comment: "fb-type--comment", approval: "fb-type--approval", change_request: "fb-type--change", blocked: "fb-type--blocked" }
 const SENTIMENT_CLASS = { positive: "ai-sentiment--positive", neutral: "ai-sentiment--neutral", negative: "ai-sentiment--negative" }
 const PRIORITY_CLASS  = { low: "ai-priority--low", medium: "ai-priority--medium", high: "ai-priority--high" }
+
+const MAX_FILE_SIZE = 102400 * 1024 // matches backend: file => required|file|max:102400 (KB)
+
+const feedbackSchema = z.object({
+    message: z.string().min(3, "Message must be at least 3 characters"),
+    type:    z.enum(["comment", "approval", "change_request", "blocked"]),
+})
+
+const uploadSchema = z.object({
+    file: z
+        .custom((val) => val instanceof FileList && val.length > 0, { message: "Choose a file to upload" })
+        .refine((val) => !val?.[0] || val[0].size <= MAX_FILE_SIZE, { message: "File must be under 100MB" }),
+    version: z.string().optional(),
+})
 
 function AiModal({ result, onClose }) {
     return (
@@ -42,9 +59,17 @@ function FeedbackPanel({ fileId }) {
     const { user } = useAuth()
     const queryClient = useQueryClient()
     const [open, setOpen] = useState(false)
-    const [message, setMessage] = useState("")
-    const [type, setType] = useState("comment")
     const [aiResult, setAiResult] = useState(null)
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors, isSubmitting },
+    } = useForm({
+        resolver: zodResolver(feedbackSchema),
+        defaultValues: { message: "", type: "comment" },
+    })
 
     const { data: feedback = [], isLoading } = useQuery({
         queryKey: ["feedback", fileId],
@@ -53,11 +78,10 @@ function FeedbackPanel({ fileId }) {
     })
 
     const createMutation = useMutation({
-        mutationFn: () => createFeedback(fileId, { message, type }),
+        mutationFn: (data) => createFeedback(fileId, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["feedback", fileId] })
-            setMessage("")
-            setType("comment")
+            reset({ message: "", type: "comment" })
         },
     })
 
@@ -100,33 +124,33 @@ function FeedbackPanel({ fileId }) {
                     ))}
 
                     {user?.role === "client" && (
-                        <div className="fb-compose">
+                        <form className="fb-compose" onSubmit={handleSubmit(data => createMutation.mutate(data))}>
                             <textarea
-                                className="input textarea"
+                                className={`input textarea ${errors.message ? "input-error" : ""}`}
                                 placeholder="Leave feedback..."
-                                value={message}
-                                onChange={e => setMessage(e.target.value)}
                                 rows={2}
+                                {...register("message")}
                             />
+                            {errors.message && <span className="field-error">{errors.message.message}</span>}
                             <div className="fb-compose-actions">
                                 <select
                                     className="fb-type-select"
-                                    value={type}
-                                    onChange={e => setType(e.target.value)}
+                                    {...register("type")}
                                 >
                                     <option value="comment">Comment</option>
                                     <option value="approval">Approval</option>
                                     <option value="change_request">Change Request</option>
+                                    <option value="blocked">Blocked</option>
                                 </select>
                                 <button
+                                    type="submit"
                                     className="btn btn-primary"
-                                    onClick={() => createMutation.mutate()}
-                                    disabled={!message.trim() || createMutation.isPending}
+                                    disabled={isSubmitting || createMutation.isPending}
                                 >
                                     {createMutation.isPending ? "..." : "Post"}
                                 </button>
                             </div>
-                        </div>
+                        </form>
                     )}
                 </div>
             )}
@@ -140,8 +164,19 @@ function Files() {
     const { projectId } = useParams()
     const { user } = useAuth()
     const queryClient = useQueryClient()
-    const [selectedFile, setSelectedFile] = useState(null)
-    const [version, setVersion] = useState("")
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        watch,
+        formState: { errors, isSubmitting },
+    } = useForm({
+        resolver: zodResolver(uploadSchema),
+        defaultValues: { version: "" },
+    })
+    const watchedFile = watch("file")
+    const selectedFileName = watchedFile?.[0]?.name
 
     const { data, isLoading, error } = useQuery({
         queryKey: ["files", projectId],
@@ -149,11 +184,10 @@ function Files() {
     })
 
     const uploadMutation = useMutation({
-        mutationFn: () => uploadFile(projectId, selectedFile, version),
+        mutationFn: (data) => uploadFile(projectId, data.file[0], data.version),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["files", projectId] })
-            setSelectedFile(null)
-            setVersion("")
+            reset({ version: "" })
         }
     })
 
@@ -183,30 +217,30 @@ function Files() {
             </div>
 
             {user?.role !== "client" && (
-                <div className="upload-section">
+                <form className="upload-section" onSubmit={handleSubmit(data => uploadMutation.mutate(data))}>
                     <span className="label">Upload</span>
                     <div className="file-input-wrapper">
-                        <input type="file" onChange={e => setSelectedFile(e.target.files[0])} />
-                        <div className={`file-input-display ${selectedFile ? "has-file" : ""}`}>
-                            {selectedFile ? selectedFile.name : "Choose a file..."}
+                        <input type="file" {...register("file")} />
+                        <div className={`file-input-display ${selectedFileName ? "has-file" : ""}`}>
+                            {selectedFileName ?? "Choose a file..."}
                         </div>
                     </div>
+                    {errors.file && <span className="field-error">{errors.file.message}</span>}
                     <input
-                        className="input"
+                        className={`input ${errors.version ? "input-error" : ""}`}
                         style={{ width: 140 }}
                         type="text"
                         placeholder="Version (e.g. v1.0)"
-                        value={version}
-                        onChange={e => setVersion(e.target.value)}
+                        {...register("version")}
                     />
                     <button
+                        type="submit"
                         className="btn btn-primary"
-                        onClick={() => uploadMutation.mutate()}
-                        disabled={!selectedFile || uploadMutation.isPending}
+                        disabled={isSubmitting || uploadMutation.isPending}
                     >
                         {uploadMutation.isPending ? "Uploading..." : "Upload"}
                     </button>
-                </div>
+                </form>
             )}
 
             <div className="files-grid">

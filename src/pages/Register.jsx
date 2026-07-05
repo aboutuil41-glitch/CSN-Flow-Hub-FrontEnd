@@ -1,8 +1,10 @@
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { useState } from "react"
 import { useAuth } from "../context/AuthContext"
 import { useNavigate, Link } from "react-router-dom"
+import axios from "../api/axios"
 import "../layouts/Login.css"
 
 const schema = z.object({
@@ -18,20 +20,30 @@ const schema = z.object({
 function Register() {
     const { login } = useAuth()
     const navigate  = useNavigate()
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    const [serverError, setServerError] = useState("")
+    const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm({
         resolver: zodResolver(schema)
     })
 
     const onSubmit = async (data) => {
+        setServerError("")
         try {
-            const res = await import("../api/axios").then(m =>
-                m.default.post("/register", data)
-            )
+            const res = await axios.post("/register", data)
             localStorage.setItem("token", res.data.token)
             await login(data.email, data.password)
             navigate("/Dashboard")
         } catch (err) {
-            console.error(err)
+            const backendErrors = err?.response?.data?.errors
+
+            if (backendErrors) {
+                // Laravel validation errors (e.g. "email has already been taken") -
+                // map them onto the matching field instead of a generic banner
+                Object.entries(backendErrors).forEach(([field, messages]) => {
+                    setError(field, { type: "server", message: messages[0] })
+                })
+            } else {
+                setServerError(err?.response?.data?.message || "Something went wrong. Please try again.")
+            }
         }
     }
 
@@ -44,6 +56,10 @@ function Register() {
                 </div>
 
                 <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
+                    {serverError && (
+                        <div className="field-error" style={{ marginBottom: 8 }}>{serverError}</div>
+                    )}
+
                     <div className="field">
                         <label className="field-label label">Name</label>
                         <input

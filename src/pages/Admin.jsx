@@ -1,5 +1,8 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { getStatistics, updateRole, getLogs } from "../api/admin"
 import { assignTask, createTask, getTasks } from "../api/tasks"
 import { assignMember, getProjects } from "../api/projects"
@@ -30,6 +33,28 @@ const ACTION_COLORS = {
     assigned: "yellow",
 }
 
+const roleSchema = z.object({
+    userId: z.string().min(1, "Select a user"),
+    role:   z.enum(["client", "team", "admin"]),
+})
+
+const memberSchema = z.object({
+    projectId: z.string().min(1, "Select a project"),
+    userId:    z.string().min(1, "Select a user"),
+})
+
+const taskSchema = z.object({
+    projectId:   z.string().min(1, "Select a project"),
+    title:       z.string().min(1, "Title is required").max(255, "Title is too long"),
+    description: z.string().optional(),
+})
+
+const assignSchema = z.object({
+    projectId: z.string().min(1, "Select a project"),
+    taskId:    z.string().min(1, "Select a task"),
+    userId:    z.string().min(1, "Select a user"),
+})
+
 function AdminBlock({ icon: Icon, title, children }) {
     return (
         <div className="admin-block">
@@ -44,11 +69,12 @@ function AdminBlock({ icon: Icon, title, children }) {
     )
 }
 
-function FieldGroup({ label, children }) {
+function FieldGroup({ label, error, children }) {
     return (
         <div className="admin-field-group">
             <span className="admin-field-label">{label}</span>
             {children}
+            {error && <p className="error-text">{error}</p>}
         </div>
     )
 }
@@ -63,12 +89,6 @@ function Admin() {
 
     const queryClient = useQueryClient()
     const [msg, setMsg] = useState("")
-
-    const [roleForm,    setRoleForm]    = useState({ userId: "", role: "client" })
-    const [memberForm,  setMemberForm]  = useState({ projectId: "", userId: "" })
-    const [taskForm,    setTaskForm]    = useState({ projectId: "", title: "", description: "" })
-    const [assignForm,  setAssignForm]  = useState({ taskId: "", userId: "" })
-    const [taskProject, setTaskProject] = useState("")
 
     const [logFilters, setLogFilters] = useState({ action: "", subject_type: "", user_id: "" })
     const [logPage,    setLogPage]    = useState(1)
@@ -90,52 +110,78 @@ function Admin() {
         queryFn: () => getProjects().then(r => r.data.projects),
     })
 
-    const { data: projectTasks = [] } = useQuery({
-        queryKey: ["tasks", taskProject],
-        queryFn: () => getTasks(taskProject).then(r => r.data.tasks),
-        enabled: !!taskProject,
-    })
-
     const { data: logsData, isLoading: logsLoading } = useQuery({
         queryKey: ["activity-logs", logFilters, logPage],
         queryFn: () => getLogs({ ...logFilters, action: ACTION_MAP[logFilters.action] ?? logFilters.action, page: logPage, per_page: 15 }).then(r => r.data.logs),
         keepPreviousData: true,
     })
 
+    // ── Update role form ──
+    const roleForm = useForm({
+        resolver: zodResolver(roleSchema),
+        defaultValues: { userId: "", role: "client" },
+    })
+
     const updateRoleMutation = useMutation({
         mutationFn: ({ userId, role }) => updateRole(userId, role),
-        onSuccess: () => { notify("Role updated"); setRoleForm({ userId: "", role: "client" }) },
+        onSuccess: () => { notify("Role updated"); roleForm.reset({ userId: "", role: "client" }) },
     })
+
+    // ── Assign member form ──
+    const memberForm = useForm({
+        resolver: zodResolver(memberSchema),
+        defaultValues: { projectId: "", userId: "" },
+    })
+    const memberProjectId = memberForm.watch("projectId")
 
     const assignMemberMutation = useMutation({
         mutationFn: ({ projectId, userId }) => assignMember(projectId, userId),
-        onSuccess: () => { notify("Member assigned"); setMemberForm({ projectId: "", userId: "" }) },
+        onSuccess: () => { notify("Member assigned"); memberForm.reset({ projectId: "", userId: "" }) },
+    })
+
+    // ── Create task form ──
+    const taskForm = useForm({
+        resolver: zodResolver(taskSchema),
+        defaultValues: { projectId: "", title: "", description: "" },
     })
 
     const createTaskMutation = useMutation({
         mutationFn: ({ projectId, title, description }) => createTask(projectId, { title, description }),
-        onSuccess: () => { notify("Task created"); setTaskForm({ projectId: "", title: "", description: "" }) },
+        onSuccess: () => { notify("Task created"); taskForm.reset({ projectId: "", title: "", description: "" }) },
+    })
+
+    // ── Assign task form ──
+    const assignForm = useForm({
+        resolver: zodResolver(assignSchema),
+        defaultValues: { projectId: "", taskId: "", userId: "" },
+    })
+    const assignProjectId = assignForm.watch("projectId")
+
+    const { data: projectTasks = [] } = useQuery({
+        queryKey: ["tasks", assignProjectId],
+        queryFn: () => getTasks(assignProjectId).then(r => r.data.tasks),
+        enabled: !!assignProjectId,
     })
 
     const assignTaskMutation = useMutation({
         mutationFn: ({ taskId, userId }) => assignTask(taskId, userId),
-        onSuccess: () => { notify("Task assigned"); setAssignForm({ taskId: "", userId: "" }); setTaskProject("") },
+        onSuccess: () => { notify("Task assigned"); assignForm.reset({ projectId: "", taskId: "", userId: "" }) },
     })
 
     const teamUsers = users.filter(u => u.role === "team")
 
     const unassignedTasks = projectTasks.filter(task => !task.assigned_to)
 
-    const selectedProject = projects.find(p => p.id === Number(memberForm.projectId))
+    const selectedProject = projects.find(p => p.id === Number(memberProjectId))
 
     const availableUsers = teamUsers.filter(
         user => !selectedProject?.users.some(projectUser => projectUser.id === user.id)
     )
 
-    const selectedTaskProject = projects.find(p => p.id === Number(taskProject))
+    const selectedAssignProject = projects.find(p => p.id === Number(assignProjectId))
 
-    const projectUsers = selectedTaskProject
-        ? selectedTaskProject.users.filter(u => u.role === "team")
+    const projectUsers = selectedAssignProject
+        ? selectedAssignProject.users.filter(u => u.role === "team")
         : []
 
     const logs      = logsData?.data ?? []
@@ -183,118 +229,124 @@ function Admin() {
             <div className="admin-grid">
 
                 <AdminBlock icon={Shield} title="Update user role">
-                    <FieldGroup label="User">
-                        <select className="input" value={roleForm.userId} onChange={e => setRoleForm({ ...roleForm, userId: e.target.value })}>
-                            <option value="">Select user...</option>
-                            {users.map(u => <option key={u.id} value={u.id}>{u.name} — {u.email}</option>)}
-                        </select>
-                    </FieldGroup>
-                    <FieldGroup label="New role">
-                        <select className="input" value={roleForm.role} onChange={e => setRoleForm({ ...roleForm, role: e.target.value })}>
-                            <option value="client">Client</option>
-                            <option value="team">Team</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </FieldGroup>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => updateRoleMutation.mutate(roleForm)}
-                        disabled={!roleForm.userId || updateRoleMutation.isPending}
-                    >
-                        {updateRoleMutation.isPending ? "Updating..." : "Update role"}
-                    </button>
+                    <form onSubmit={roleForm.handleSubmit(data => updateRoleMutation.mutate(data))}>
+                        <FieldGroup label="User" error={roleForm.formState.errors.userId?.message}>
+                            <select className="input" {...roleForm.register("userId")}>
+                                <option value="">Select user...</option>
+                                {users.map(u => <option key={u.id} value={u.id}>{u.name} — {u.email}</option>)}
+                            </select>
+                        </FieldGroup>
+                        <FieldGroup label="New role" error={roleForm.formState.errors.role?.message}>
+                            <select className="input" {...roleForm.register("role")}>
+                                <option value="client">Client</option>
+                                <option value="team">Team</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </FieldGroup>
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={updateRoleMutation.isPending}
+                        >
+                            {updateRoleMutation.isPending ? "Updating..." : "Update role"}
+                        </button>
+                    </form>
                 </AdminBlock>
 
                 <AdminBlock icon={UserPlus} title="Assign member to project">
-                    <FieldGroup label="Project">
-                        <select className="input" value={memberForm.projectId} onChange={e => setMemberForm({ ...memberForm, projectId: e.target.value })}>
-                            <option value="">Select project...</option>
-                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                    </FieldGroup>
-                    <FieldGroup label="Member">
-                        <select className="input" value={memberForm.userId} onChange={e => setMemberForm({ ...memberForm, userId: e.target.value })}>
-                            <option value="">Select user...</option>
-                            {availableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                        </select>
-                    </FieldGroup>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => assignMemberMutation.mutate(memberForm)}
-                        disabled={!memberForm.projectId || !memberForm.userId || assignMemberMutation.isPending}
-                    >
-                        {assignMemberMutation.isPending ? "Assigning..." : "Assign member"}
-                    </button>
+                    <form onSubmit={memberForm.handleSubmit(data => assignMemberMutation.mutate(data))}>
+                        <FieldGroup label="Project" error={memberForm.formState.errors.projectId?.message}>
+                            <select
+                                className="input"
+                                {...memberForm.register("projectId", { onChange: () => memberForm.setValue("userId", "") })}
+                            >
+                                <option value="">Select project...</option>
+                                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                        </FieldGroup>
+                        <FieldGroup label="Member" error={memberForm.formState.errors.userId?.message}>
+                            <select className="input" {...memberForm.register("userId")}>
+                                <option value="">Select user...</option>
+                                {availableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                            </select>
+                        </FieldGroup>
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={assignMemberMutation.isPending}
+                        >
+                            {assignMemberMutation.isPending ? "Assigning..." : "Assign member"}
+                        </button>
+                    </form>
                 </AdminBlock>
 
                 <AdminBlock icon={Plus} title="Create task">
-                    <FieldGroup label="Project">
-                        <select className="input" value={taskForm.projectId} onChange={e => setTaskForm({ ...taskForm, projectId: e.target.value })}>
-                            <option value="">Select project...</option>
-                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                    </FieldGroup>
-                    <FieldGroup label="Title">
-                        <input
-                            className="input"
-                            placeholder="Task title"
-                            value={taskForm.title}
-                            onChange={e => setTaskForm({ ...taskForm, title: e.target.value })}
-                        />
-                    </FieldGroup>
-                    <FieldGroup label="Description">
-                        <textarea
-                            className="input textarea"
-                            placeholder="Description (optional)"
-                            value={taskForm.description}
-                            onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
-                        />
-                    </FieldGroup>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => createTaskMutation.mutate(taskForm)}
-                        disabled={!taskForm.projectId || !taskForm.title || createTaskMutation.isPending}
-                    >
-                        {createTaskMutation.isPending ? "Creating..." : "Create task"}
-                    </button>
+                    <form onSubmit={taskForm.handleSubmit(data => createTaskMutation.mutate(data))}>
+                        <FieldGroup label="Project" error={taskForm.formState.errors.projectId?.message}>
+                            <select className="input" {...taskForm.register("projectId")}>
+                                <option value="">Select project...</option>
+                                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                        </FieldGroup>
+                        <FieldGroup label="Title" error={taskForm.formState.errors.title?.message}>
+                            <input
+                                className="input"
+                                placeholder="Task title"
+                                {...taskForm.register("title")}
+                            />
+                        </FieldGroup>
+                        <FieldGroup label="Description" error={taskForm.formState.errors.description?.message}>
+                            <textarea
+                                className="input textarea"
+                                placeholder="Description (optional)"
+                                {...taskForm.register("description")}
+                            />
+                        </FieldGroup>
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={createTaskMutation.isPending}
+                        >
+                            {createTaskMutation.isPending ? "Creating..." : "Create task"}
+                        </button>
+                    </form>
                 </AdminBlock>
 
                 <AdminBlock icon={UserCheck} title="Assign task">
-                    <FieldGroup label="Project">
-                        <select
-                            className="input"
-                            value={taskProject}
-                            onChange={e => { setTaskProject(e.target.value); setAssignForm({ ...assignForm, taskId: "" }) }}
+                    <form onSubmit={assignForm.handleSubmit(data => assignTaskMutation.mutate(data))}>
+                        <FieldGroup label="Project" error={assignForm.formState.errors.projectId?.message}>
+                            <select
+                                className="input"
+                                {...assignForm.register("projectId", { onChange: () => assignForm.setValue("taskId", "") })}
+                            >
+                                <option value="">Select project...</option>
+                                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                        </FieldGroup>
+                        <FieldGroup label="Task" error={assignForm.formState.errors.taskId?.message}>
+                            <select
+                                className="input"
+                                {...assignForm.register("taskId")}
+                                disabled={!assignProjectId}
+                            >
+                                <option value="">Select task...</option>
+                                {unassignedTasks.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                            </select>
+                        </FieldGroup>
+                        <FieldGroup label="Assign to" error={assignForm.formState.errors.userId?.message}>
+                            <select className="input" {...assignForm.register("userId")}>
+                                <option value="">Select user...</option>
+                                {projectUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                            </select>
+                        </FieldGroup>
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={assignTaskMutation.isPending}
                         >
-                            <option value="">Select project...</option>
-                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                    </FieldGroup>
-                    <FieldGroup label="Task">
-                        <select
-                            key={taskProject}
-                            className="input"
-                            value={assignForm.taskId}
-                            onChange={e => setAssignForm({ ...assignForm, taskId: e.target.value })}
-                            disabled={!taskProject}
-                        >
-                            <option value="">Select task...</option>
-                            {unassignedTasks.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
-                        </select>
-                    </FieldGroup>
-                    <FieldGroup label="Assign to">
-                        <select className="input" value={assignForm.userId} onChange={e => setAssignForm({ ...assignForm, userId: e.target.value })}>
-                            <option value="">Select user...</option>
-                            {projectUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                        </select>
-                    </FieldGroup>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => assignTaskMutation.mutate(assignForm)}
-                        disabled={!assignForm.taskId || !assignForm.userId || assignTaskMutation.isPending}
-                    >
-                        {assignTaskMutation.isPending ? "Assigning..." : "Assign task"}
-                    </button>
+                            {assignTaskMutation.isPending ? "Assigning..." : "Assign task"}
+                        </button>
+                    </form>
                 </AdminBlock>
 
             </div>

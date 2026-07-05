@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { useState } from "react"
 import { useAuth } from "../context/AuthContext"
 import { useNavigate, Link } from "react-router-dom"
 import "../layouts/Login.css"
@@ -13,16 +14,18 @@ const schema = z.object({
 function Login() {
     const { login } = useAuth()
     const navigate  = useNavigate()
+    const [serverError, setServerError] = useState("")
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
         resolver: zodResolver(schema)
     })
 
     const onSubmit = async (data) => {
+        setServerError("")
         try {
             await login(data.email, data.password)
             navigate("/Dashboard")
         } catch (err) {
-            console.error(err)
+            setServerError(err?.response?.data?.message || "Something went wrong. Please try again.")
         }
     }
 
@@ -35,6 +38,10 @@ function Login() {
                 </div>
 
                 <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
+                    {serverError && (
+                        <div className="field-error" style={{ marginBottom: 8 }}>{serverError}</div>
+                    )}
+
                     <div className="field">
                         <label className="field-label label">Email</label>
                         <input
@@ -81,4 +88,4 @@ function Login() {
     )
 }
 
-export default Login
+export default Login    
